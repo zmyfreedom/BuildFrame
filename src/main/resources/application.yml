@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /demo
+
+spring:
+  profiles:
+    active: pro
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    username: root
+    password: zhumy123456
+    url: jdbc:mysql://localhost:3306/zmy?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  type-aliases-package: com.zmy.demo.entity
+  mapper-locations: classpath:mapper/*.xml
+
+
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: pro
+
+datasource:
+  username: root
+  password: zhumy123456
+  url: jdbc:mysql://47.122.65.237:3306/zmy?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+  driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  type-aliases-package: com.zmy.demo.entity
+  mapper-locations: classpath:mapper/*.xml
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+
+
+
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zmy.dao.UserInfoDao">
+    <resultMap id="userInfo" type="com.zmy.entity.User">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="id" column="ID" jdbcType="VARCHAR"/>
+        <result property="name" column="NAME" jdbcType="VARCHAR"/>
+        <result property="age" column="AGE" jdbcType="TINYINT"/>
+        <result property="birthDay" column="BIRTH_DAY" jdbcType="DATE"/>
+    </resultMap>
+
+    <select id="getUserInfoById" resultMap="userInfo">
+        SELECT * FROM USER_INFO WHERE ID = #{id,jdbcType=VARCHAR}
+    </select>
+
+
+    <insert id="addUser" parameterType="com.zmy.entity.User">
+        insert into user_info (id,name,age,birth_day)
+        values (#{id,jdbcType=VARCHAR},#{name,jdbcType=VARCHAR},#{age,jdbcType=TINYINT},#{birthDay,jdbcType=DATE})
+    </insert>
+</mapper>
