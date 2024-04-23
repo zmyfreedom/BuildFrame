@@ -23,6 +23,14 @@ mybatis:
   type-aliases-package: com.zmy.demo.entity
   mapper-locations: classpath:mapper/*.xml
 
+springdoc:
+  #  packages-to-scan: com.zmy
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
 
 
 
@@ -32,15 +40,43 @@ spring:
     activate:
       on-profile: pro
 
-datasource:
-  username: root
-  password: zhumy123456
-  url: jdbc:mysql://47.122.65.237:3306/zmy?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
-  driver-class-name: com.mysql.cj.jdbc.Driver
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://47.122.65.237:3306/zmy?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
   type-aliases-package: com.zmy.demo.entity
   mapper-locations: classpath:mapper/*.xml
+
+springdoc:
+#  packages-to-scan: com.zmy
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+#  group-configs:
+#    - group: 'UserManager'
+#      paths-to-match: '/user/**'
+#      packages-to-scan: com.zmy.controller
+#    - group: "ResourceManager"
+#      paths-to-match: '/resource/**'
+#      packages-to-scan: com.zmy.controller
+
+#knife4j增强配置,可选
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+logging:
+  config: classpath:logback.xml
+  level:
+    com.zmy.dao: debug
 
 
 ---

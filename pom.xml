@@ -41,6 +41,38 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!--Swagger-->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
+        <!--Hutool-->
+        <!--https://blog.csdn.net/houxian1103/article/details/128721100?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171388026816800182795158%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=171388026816800182795158&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-128721100-null-null.142^v100^pc_search_result_base6&utm_term=hutool&spm=1018.2226.3001.4187-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.27</version>
+        </dependency>
+
+<!--        已有lombok不需要依赖-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.slf4j</groupId>-->
+<!--            <artifactId>slf4j-api</artifactId>-->
+<!--            <version>1.7.32</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--            <artifactId>logback-core</artifactId>-->
+<!--            <version>1.4.14</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--            <artifactId>logback-classic</artifactId>-->
+<!--            <version>1.4.14</version>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>

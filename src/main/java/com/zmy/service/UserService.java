@@ -9,5 +9,5 @@ import com.zmy.entity.User;
 public interface UserService {
     User getUser(String id);
 
-    void addUser(String name, int age, String birthDay);
+    void addUser(String id, String name, int age, String birthDay);
 }
