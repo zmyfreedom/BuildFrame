@@ -14,9 +14,9 @@ spring:
       on-profile: dev
 
   datasource:
-    username: root
-    password: zhumy123456
-    url: jdbc:mysql://localhost:3306/zmy?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ****
+    password: ****
+    url: jdbc:mysql://localhost:3306/****?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
@@ -41,9 +41,9 @@ spring:
       on-profile: pro
 
   datasource:
-    username: root
-    password: 123456
-    url: jdbc:mysql://47.122.65.237:3306/zmy?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: *****
+    password: *****
+    url: jdbc:mysql://localhost:3306/****?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
