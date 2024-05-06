@@ -25,11 +25,13 @@ public class UserController {
 
     @GetMapping("getUser")
     @Operation(summary = "通过id获取用户信息")
-    public ResponseResult<User> getUser(@Param("id")String id){
+    public ResponseResult<User> getUser(@Param("id")@RequestParam String id){
         try{
             log.info("info logTest,id:{}", id);
             log.debug("debug  logTest,id:{}", id);
-            return ResponseResult.ok(userService.getUser(id));
+            User user=userService.getUser(id);
+            log.debug(user.toString());
+            return ResponseResult.ok(user);
         }catch (Exception e){
             e.printStackTrace();
             return ResponseResult.error(400,null,"查询失败");
@@ -38,7 +40,8 @@ public class UserController {
 
     @PostMapping("addUser")
     @Operation(summary = "添加用户")
-    public ResponseResult<String> addUser(@Param("id") String id, @Param("name")String name, @Param("age") int age, @Param("birthDay") String birthDay){
+    public ResponseResult<String> addUser(@Param("id") @RequestParam String id, @Param("name") @RequestParam String name,
+                                          @Param("age") @RequestParam int age, @Param("birthDay") @RequestParam String birthDay){
         try{
             userService.addUser(id,name,age,birthDay);
             return ResponseResult.ok("添加成功");

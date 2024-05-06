@@ -9,16 +9,16 @@
         <id property="id" column="ID" jdbcType="VARCHAR"/>
         <result property="name" column="NAME" jdbcType="VARCHAR"/>
         <result property="age" column="AGE" jdbcType="TINYINT"/>
-        <result property="birthDay" column="BIRTH_DAY" jdbcType="DATE"/>
+        <result property="birthDay" column="BIRTHDAY" jdbcType="DATE"/>
     </resultMap>
 
     <select id="getUserInfoById" resultMap="userInfo">
-        SELECT * FROM USER_INFO WHERE ID = #{id,jdbcType=VARCHAR}
+        SELECT id, name, age, birthDay FROM USER_INFO WHERE ID = #{id,jdbcType=VARCHAR}
     </select>
 
 
     <insert id="addUser" parameterType="com.zmy.entity.User">
-        insert into user_info (id,name,age,birth_day)
+        insert into user_info (id,name,age,birthDay)
         values (#{id,jdbcType=VARCHAR},#{name,jdbcType=VARCHAR},#{age,jdbcType=TINYINT},#{birthDay,jdbcType=DATE})
     </insert>
 </mapper>

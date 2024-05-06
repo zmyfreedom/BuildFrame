@@ -56,7 +56,13 @@
             <version>5.8.27</version>
         </dependency>
 
-<!--        已有lombok不需要依赖-->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
+        <!--        已有lombok不需要依赖-->
 
 <!--        <dependency>-->
 <!--            <groupId>org.slf4j</groupId>-->

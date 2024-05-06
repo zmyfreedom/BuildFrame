@@ -1,11 +1,11 @@
 server:
   port: 8080
   servlet:
-    context-path: /demo
+    context-path: /BuildFrame
 
 spring:
   profiles:
-    active: pro
+    active: dev
 
 ---
 spring:
@@ -14,10 +14,15 @@ spring:
       on-profile: dev
 
   datasource:
-    username: ****
-    password: ****
-    url: jdbc:mysql://localhost:3306/****?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ${mysql.username}
+    password: ${mysql.password}
+    url: jdbc:mysql://${mysql.host}/buildframe?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+mysql:
+  username: ENC(dXXCUIxztgFktNUO70xpxQ==)
+  password: ENC(xxE70KtNnjoHL1Ux9nHt8Q==)
+  host: ENC(XlmyGkt5RXIU0bpcDPJ8+8IWTWzstLH0)
 
 mybatis:
   type-aliases-package: com.zmy.demo.entity
@@ -32,7 +37,22 @@ springdoc:
     path: /v3/api-docs
     enabled: true
 
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    #add password solt value
+    #password:
 
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+logging:
+  config: classpath:logback.xml
+  level:
+    com.zmy.dao: error
 
 ---
 spring:
@@ -41,10 +61,15 @@ spring:
       on-profile: pro
 
   datasource:
-    username: *****
-    password: *****
-    url: jdbc:mysql://localhost:3306/****?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ${mysql.username}
+    password: ${mysql.password}
+    url: jdbc:mysql://${mysql.host}/buildframe?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+mysql:
+  username: ENC(8oih0Xx/5ECLBftOs/KwQQ==)
+  password: ENC(jGtNfMhRHY1kULn8Hl43ihWsS1UA6EwC)
+  host: ENC(dikcaILS5Gxkw0+SX0G34imAXFcS7dGD2muKUxqIA9c=)
 
 mybatis:
   type-aliases-package: com.zmy.demo.entity
@@ -76,8 +101,14 @@ knife4j:
 logging:
   config: classpath:logback.xml
   level:
-    com.zmy.dao: debug
+    com.zmy.dao: error
 
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    #add password solt value
+    #password:
 
 ---
 spring:

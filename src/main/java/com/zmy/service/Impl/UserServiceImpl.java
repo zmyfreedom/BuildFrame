@@ -4,6 +4,9 @@ import com.zmy.dao.UserInfoDao;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
 import jakarta.annotation.Resource;
+import org.jasypt.encryption.StringEncryptor;
+import org.jasypt.util.text.BasicTextEncryptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -15,9 +18,9 @@ import java.util.UUID;
  */
 @Service
 public class UserServiceImpl implements UserService {
-
     @Resource
     private UserInfoDao userInfoDao;
+
     @Override
     public User getUser(String id) {
         return userInfoDao.getUserInfoById(id);
@@ -35,7 +38,7 @@ public class UserServiceImpl implements UserService {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try{
             user.setBirthDay(simpleDateFormat.parse(birthday));
-            System.out.println(simpleDateFormat.parse("1995-12-20"));
+            System.out.println(simpleDateFormat.parse("1998-12-20"));
         }catch (Exception e){
             e.printStackTrace();
         }
