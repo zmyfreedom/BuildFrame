@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("user")
 @Tag(name="用户管理")
 @Slf4j
+//@CrossOrigin(originPatterns = "*" , allowedHeaders = "*", allowCredentials = "true")
 public class UserController {
 //    private final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Resource
