@@ -23,7 +23,11 @@ public class ResponseResult<T> {
         return new ResponseResult<>(200,data,"success");
     }
 
-    public static <T> ResponseResult<T> error(int code, T data,String message){
+    public static <T> ResponseResult<T> ok(T data,String message){
+        return new ResponseResult<>(200,data,message);
+    }
+
+    public static <T> ResponseResult<T> error(int code, T data, String message){
         return new ResponseResult<>(code,data,message);
     }
 }

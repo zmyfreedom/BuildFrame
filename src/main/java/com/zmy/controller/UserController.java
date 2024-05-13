@@ -1,5 +1,6 @@
 package com.zmy.controller;
 
+import com.zmy.Exception.CustomException;
 import com.zmy.common.ResponseResult;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -26,16 +28,21 @@ public class UserController {
 
     @GetMapping("getUser")
     @Operation(summary = "通过id获取用户信息")
-    public ResponseResult<User> getUser(@Param("id")@RequestParam String id){
+    public ResponseResult<User> getUser(@Param("id") String id){
         try{
-            log.info("info logTest,id:{}", id);
-            log.debug("debug  logTest,id:{}", id);
             User user=userService.getUser(id);
             log.debug(user.toString());
             return ResponseResult.ok(user);
-        }catch (Exception e){
+        }catch (NullPointerException e){
             e.printStackTrace();
-            return ResponseResult.error(400,null,"查询失败");
+            throw e;
+        }catch (CustomException e){
+            e.printStackTrace();
+            throw e;
+        }catch(Exception e){
+            e.printStackTrace();
+            //throw (CustomException)e;
+            return ResponseResult.error(400,null, e.getMessage());
         }
     }
 

@@ -27,7 +27,7 @@ public class Knife4jConfig {
     public GroupedOpenApi resourceApi() {      // 创建了一个api接口的分组
         return GroupedOpenApi.builder()
                 .group("ResourceManager")         // 分组名称
-                .pathsToMatch("/resource/**")  // 接口请求路径规则
+                .pathsToMatch("/listener/**")  // 接口请求路径规则
                 .build();
     }
     @Bean
