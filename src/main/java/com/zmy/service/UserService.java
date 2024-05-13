@@ -1,6 +1,7 @@
 package com.zmy.service;
 
 import com.zmy.entity.User;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.text.ParseException;
 
@@ -12,4 +13,6 @@ public interface UserService {
     User getUser(String id);
 
     void addUser(String id, String name, int age, String birthDay) throws Exception;
+
+    void generateDoc(HttpServletResponse response);
 }

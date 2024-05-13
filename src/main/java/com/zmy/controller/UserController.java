@@ -2,11 +2,13 @@ package com.zmy.controller;
 
 import com.zmy.Exception.CustomException;
 import com.zmy.common.ResponseResult;
+import com.zmy.common.UnInterceptor;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -56,6 +58,19 @@ public class UserController {
         }catch (Exception e){
             e.printStackTrace();
             return ResponseResult.error(400,null,"添加失败");
+        }
+    }
+
+    @GetMapping("generateDoc")
+    @Operation(summary = "生成文档")
+    @UnInterceptor
+    public ResponseResult<String> generateDoc(HttpServletResponse response){
+        try{
+            userService.generateDoc(response);
+            return ResponseResult.ok("生成成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseResult.error(400,null,"生成失败");
         }
     }
 }
