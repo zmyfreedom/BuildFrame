@@ -32,6 +32,8 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true # 驼峰命名规范:数据库字段名与表中字段名自动映射
+  mapper:
+    reload: true #开启MyBatis的热更新
 
 springdoc:
   #  packages-to-scan: com.zmy
@@ -81,6 +83,8 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true # 驼峰命名规范:数据库字段名与表中字段名自动映射
+  mapper:
+    reload: true #开启MyBatis的热更新
 
 springdoc:
 #  packages-to-scan: com.zmy

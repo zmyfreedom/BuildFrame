@@ -1,16 +1,22 @@
 package com.zmy.service.Impl;
 
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.Pictures;
 import com.zmy.Exception.CustomException;
 import com.zmy.dao.UserInfoDao;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.util.StringUtil;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -24,6 +30,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static java.lang.Thread.sleep;
 
 /**
  * @author zmy
@@ -79,12 +89,17 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    // Transactional将整个方法放入事务中，如果方法内部抛出异常，则事务会回滚
+    // 注意：如果事务被本地的try-catch处理了，则不会回滚
+    // 内部多线程不在事务之内，如果线程抛出异常，则不会回滚
+    // 事务更新到数据库需要一定时间，线程立即读是读不到的
     @Override
-    @Transactional(rollbackFor = Exception.class)//
+    @Transactional(rollbackFor = Exception.class)
     public void addUser(String id, String name, int age, String birthday) throws Exception {
         User user = new User();
-        if(id == null || id.equals(""))
-            user.setId(UUID.randomUUID().toString());
+
+        if(StrUtil.isEmpty(id))
+            user.setId(IdUtil.randomUUID());
         else
             user.setId(id);
         user.setName(name);
@@ -99,20 +114,54 @@ public class UserServiceImpl implements UserService {
         }
 
         System.out.println(user);
-        userInfoDao.addUser(user);
-        //在service层抛出异常，事务才会回滚，如果事务被本地的try catch处理了，则不会回滚
+        //在service层抛出异常，事务才会回滚，如果事务被本地的try-catch处理了，则不会回滚
         //事务的范围比锁的范围大,解锁后事务可能还未退出，此时数据库尚未解锁
         //
         try{
-            throw new RuntimeException("addUser exception");
+            userInfoDao.addUser(user);
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+//            User user1 = userInfoDao.getUserInfoById(id);
+//            log.info("addUser exception\n{}",user1);
+//            throw new RuntimeException("addUser exception");
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        sleep(10);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    User user1 = userInfoDao.getUserInfoById(id);
+                    log.info("addUser exception\n{}",user1);
+                    throw new RuntimeException("addUser exception");
+                }
+            });
         }catch(Exception e){
             e.printStackTrace();
+            log.error("addUser error:{}",e.getMessage());
+            throw e;
         }
-        throw new RuntimeException("addUser exception");
+        //throw new RuntimeException("addUser exception");
     }
 
     @Override
     public void generateDoc(HttpServletResponse response){
+//        PdfOptions options = PdfOptions.create();
+//        XWPFDocument document;
+//        try{
+//            InputStream doc = new FileInputStream("E:\\Java\\IntroductiontoAlgorithm.docx");
+//            document = new XWPFDocument(doc);
+//            OutputStream out = new FileOutputStream("E:\\Java\\pdfFile.pdf");
+//            PdfConverter.getInstance().convert(document, out, options);
+//            doc.close();
+//            out.close();
+//            if(true)
+//                return;
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
         Map<String, Object> map = getMap();
         //获取根目录，创建模板文件
         String filePath = copyTempFile("public/word/DocTemplate.docx");

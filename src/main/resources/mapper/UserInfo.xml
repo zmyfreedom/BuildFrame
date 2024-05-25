@@ -13,7 +13,7 @@
     </resultMap>
 
     <select id="getUserInfoById" resultMap="userInfo">
-        SELECT id, name, age, birthDay FROM USER_INFO WHERE ID = #{id,jdbcType=VARCHAR}
+        SELECT id, name, age, birthDay FROM USER_INFO WHERE ID = '3'
     </select>
 
 
