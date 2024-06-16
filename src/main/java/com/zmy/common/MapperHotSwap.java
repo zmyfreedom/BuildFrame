@@ -7,7 +7,6 @@ import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.boot.autoconfigure.MybatisProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -26,9 +25,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class MapperHotSwap {
-    @Autowired
+    @jakarta.annotation.Resource
     private MybatisProperties mybatisProperties;
-    @Autowired
+    @jakarta.annotation.Resource
     private SqlSessionFactory sqlSessionFactory;
 
     private Resource[] mapperLocations;
@@ -44,7 +43,7 @@ public class MapperHotSwap {
         private Boolean reload = false;
     }
 
-    @Autowired
+    @jakarta.annotation.Resource
     private MapperHotSwapProperties hotSwapProperties;
 
     @PostConstruct
@@ -53,12 +52,15 @@ public class MapperHotSwap {
             if(!hotSwapProperties.getReload())
                 return;
             prepareEnv();
-            Runnable runnable = new Runnable() {
+            Runnable s=new Runnable() {
                 @Override
                 public void run() {
                     changeCompare();
                 }
             };
+            //方法引用的本质是为了实现逻辑复用，返回类型和参数列表应该一致
+            //函数式接口(Runnable)可以使用方法引用来实现抽象方法(.run())，从而实现相应的功能
+            Runnable runnable = this::changeCompare;
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
             executorService.scheduleAtFixedRate(runnable, 1, 10, TimeUnit.SECONDS);
             log.info("Mapper热更新已启动");

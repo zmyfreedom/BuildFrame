@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.Pictures;
 import com.zmy.Exception.CustomException;
+import com.zmy.common.CustomExceptionEnum;
 import com.zmy.dao.UserInfoDao;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
@@ -72,8 +73,7 @@ public class UserServiceImpl implements UserService {
 
         try{
             log.info("user.id: {}",user.getId());
-            //int i = 10/0;
-            //return user;
+
         }catch(CustomException e){
             e.printStackTrace();
             throw e;
@@ -83,8 +83,8 @@ public class UserServiceImpl implements UserService {
             throw e;
         }catch(Exception e){
             e.printStackTrace();
-            throw e;
-            //throw new CustomException(CustomExceptionEnum.PARAMETER_BIG_EXCEPTION);
+//            throw e;
+//            throw new CustomException(CustomExceptionEnum.PARAMETER_BIG_EXCEPTION);
         }
         return user;
     }
@@ -106,7 +106,7 @@ public class UserServiceImpl implements UserService {
         user.setAge(age);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try{
-            user.setBirthDay(simpleDateFormat.parse(birthday));
+            user.setBirthday(simpleDateFormat.parse(birthday));
             System.out.println(simpleDateFormat.parse("1998-12-20"));
         }catch (Exception e){
             e.printStackTrace();
@@ -164,7 +164,7 @@ public class UserServiceImpl implements UserService {
 //        }
         Map<String, Object> map = getMap();
         //获取根目录，创建模板文件
-        String filePath = copyTempFile("public/word/DocTemplate.docx");
+        String filePath = copyTempFile("classpath:public/word/DocTemplate.docx");
         String fileName=System.currentTimeMillis()+".docx";
         String tempPath="E:\\Java"+fileName;
         try{
@@ -195,10 +195,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private String copyTempFile(String tempFilePath){
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(tempFilePath);
+//        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(tempFilePath);
+        InputStream inputStream=null;
         String tempFileName = System.getProperty("user.home")+"/GenerateDoc.docx";
         File file = new File(tempFileName);
         try{
+            inputStream=new FileInputStream(new File("E:\\Java\\code\\src\\main\\resources\\public\\word\\DocTemplate.docx"));
             FileUtils.copyInputStreamToFile(inputStream,file);
         }catch (IOException e){
             e.printStackTrace();

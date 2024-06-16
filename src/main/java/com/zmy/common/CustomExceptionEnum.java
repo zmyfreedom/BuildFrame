@@ -1,7 +1,12 @@
 package com.zmy.common;
 
+/**
+ * 1、需要在枚举实例后面加上分号，然后再写构造函数等
+ * 2、枚举实例必须在前面
+ * 3、定义枚举的构造器方法带参,只能为private
+ */
 public enum CustomExceptionEnum {
-    /** 参数异常 */
+    /** 参数异常 ordinal():0,name(): PARAMETER_EXCEPTION*/
     PARAMETER_EXCEPTION(102, "参数异常!"),
     /** 等待超时 */
     SERVICE_TIME_OUT(103, "服务调用超时！"),
@@ -20,7 +25,8 @@ public enum CustomExceptionEnum {
      */
     private final String message;
 
-    private CustomExceptionEnum(int code, String message) {
+    // 构造方法
+    CustomExceptionEnum(int code, String message) {
         this.code = code;
         this.message = message;
     }
@@ -33,5 +39,4 @@ public enum CustomExceptionEnum {
     public String getMessage() {
         return message;
     }
-
 }
