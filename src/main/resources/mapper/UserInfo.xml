@@ -21,4 +21,9 @@
         insert into user_info (id,name,age,birthday)
         values (#{id,jdbcType=VARCHAR},#{name,jdbcType=VARCHAR},#{age,jdbcType=TINYINT},#{birthday,jdbcType=DATE})
     </insert>
+
+    <insert id="add" parameterType="com.zmy.entity.User">
+        insert into user_info (id,name,age,birthday)
+        values (#{id,jdbcType=VARCHAR},#{name,jdbcType=VARCHAR},#{age,jdbcType=TINYINT},#{birthday,jdbcType=DATE})
+    </insert>
 </mapper>

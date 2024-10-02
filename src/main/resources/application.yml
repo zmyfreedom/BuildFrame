@@ -52,7 +52,7 @@ jasypt:
     algorithm: PBEWithMD5AndDES
     iv-generator-classname: org.jasypt.iv.NoIvGenerator
     #add password solt value
-    #password:
+#    password:
 
 knife4j:
   enable: true
@@ -60,7 +60,7 @@ knife4j:
     language: zh_cn
 
 logging:
-  config: classpath:logback.xml
+#  config: classpath:logback.xml
   level:
     com.zmy.dao: error
 

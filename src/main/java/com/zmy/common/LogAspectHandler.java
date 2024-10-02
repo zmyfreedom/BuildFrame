@@ -32,7 +32,7 @@ public class LogAspectHandler {
     *(..) ：这个星号表示方法名，* 表示所有的方法，后面括弧里面表示方法的参数，两个句点表示任何参数
      */
     //*/
-    @Pointcut("execution(* com.zmy.service.Impl.*.*(..))")
+    @Pointcut("execution(* com.zmy.service.impl.*.*(..))")
     public void methodPointCut(){}
 
     //annotation() 方式是针对某个注解来定义切面，比如对具有@GetMapping注解的方法做切面
@@ -59,10 +59,11 @@ public class LogAspectHandler {
             ip= InetAddress.getLocalHost().getHostAddress();
             log.info("request ip: {}", ip);
         }catch (NullPointerException e){
-            if(ip == null)
+            if(ip == null) {
                 log.info("request ip: {}", "null");
-            else
+            } else {
                 throw e;
+            }
         }
     }
 

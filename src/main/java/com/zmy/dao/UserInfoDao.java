@@ -9,8 +9,10 @@ import org.apache.ibatis.annotations.Mapper;
  */
 //在启动类上使用@MapperScan("com.zmy.dao"),则在其他dao上不用再单独使用@Mapper
 @Mapper
-public interface UserInfoDao {
+public interface UserInfoDao extends BaseDao<User> {
     User getUserInfoById(String  id);
 
     void addUser(User user);
+
+
 }

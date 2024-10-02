@@ -1,23 +1,23 @@
-package com.zmy.service.Impl;
+package com.zmy.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.Pictures;
 import com.zmy.Exception.CustomException;
-import com.zmy.common.CustomExceptionEnum;
+import com.zmy.dao.BaseDao;
 import com.zmy.dao.UserInfoDao;
 import com.zmy.entity.User;
 import com.zmy.service.UserService;
-import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
-import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.poi.util.StringUtil;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -27,12 +27,9 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.*;
 
 import static java.lang.Thread.sleep;
 
@@ -45,6 +42,9 @@ import static java.lang.Thread.sleep;
 public class UserServiceImpl implements UserService {
     @Resource
     private UserInfoDao userInfoDao;
+
+    @Resource
+    private ApplicationContext applicationContext;
 
     @Override
     public User getUser(String id) {
@@ -98,10 +98,11 @@ public class UserServiceImpl implements UserService {
     public void addUser(String id, String name, int age, String birthday) throws Exception {
         User user = new User();
 
-        if(StrUtil.isEmpty(id))
+        if(StrUtil.isEmpty(id)) {
             user.setId(IdUtil.randomUUID());
-        else
+        } else {
             user.setId(id);
+        }
         user.setName(name);
         user.setAge(age);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -118,24 +119,27 @@ public class UserServiceImpl implements UserService {
         //事务的范围比锁的范围大,解锁后事务可能还未退出，此时数据库尚未解锁
         //
         try{
-            userInfoDao.addUser(user);
-            ExecutorService executorService = Executors.newFixedThreadPool(10);
+//            BaseDao<User> baseDao = applicationContext.getBean(UserInfoDao.class);
+//            baseDao.add(user);
+            insert(user, UserInfoDao.class);
+            ExecutorService executorService = new ThreadPoolExecutor(1, 1, 0L,
+                    TimeUnit.SECONDS, new LinkedBlockingDeque<>(100),
+                    r -> {
+                        Thread thread = new Thread(r);
+                        thread.setName("addUser-thread"+thread.getId());
+                        thread.setDaemon(true);
+                        return thread;
+                    }, new ThreadPoolExecutor.DiscardPolicy());
 
-//            User user1 = userInfoDao.getUserInfoById(id);
-//            log.info("addUser exception\n{}",user1);
-//            throw new RuntimeException("addUser exception");
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        sleep(10);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    User user1 = userInfoDao.getUserInfoById(id);
-                    log.info("addUser exception\n{}",user1);
-                    throw new RuntimeException("addUser exception");
+            executorService.execute(() -> {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
+                User user1 = userInfoDao.getUserInfoById(id);
+                log.info("addUser exception\n{}",user1);
+                throw new RuntimeException("addUser exception");
             });
         }catch(Exception e){
             e.printStackTrace();
@@ -145,8 +149,13 @@ public class UserServiceImpl implements UserService {
         //throw new RuntimeException("addUser exception");
     }
 
+    private <E, D extends BaseDao<E>> void insert(E user, Class<D> clazz){
+        D obj = applicationContext.getBean(clazz);
+        obj.add(user);
+    }
     @Override
     public void generateDoc(HttpServletResponse response){
+        // pdf转换word
 //        PdfOptions options = PdfOptions.create();
 //        XWPFDocument document;
 //        try{
@@ -162,6 +171,7 @@ public class UserServiceImpl implements UserService {
 //        catch (Exception e){
 //            e.printStackTrace();
 //        }
+
         Map<String, Object> map = getMap();
         //获取根目录，创建模板文件
         String filePath = copyTempFile("classpath:public/word/DocTemplate.docx");
@@ -244,7 +254,7 @@ public class UserServiceImpl implements UserService {
         return encode.replaceAll("\\+", "%20");
     }
     private Map<String, Object> getMap(){
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>(7);
         map.put("name","CodeGeeX");
         map.put("role","AI编程助手");
         map.put("work","帮助用户在运行时访问和打印静态常量，从而避免编译时的潜在问题");

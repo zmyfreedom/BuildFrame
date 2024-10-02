@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Intercepts({
         @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),
@@ -51,7 +50,7 @@ public class SqlInterceptor implements Interceptor {
     }
 
     //Invocation对象是MyBatis执行SQL调用时的上下文
-    private String generateSql(Invocation invocation) throws Exception {
+    private String generateSql(Invocation invocation) {
         // 获取到BoundSql以及Configuration对象
         // BoundSql对象存储了一条具体的SQL语句以及相关参数信息
         // Configuration对象存储了MyBatis的配置信息，例如mapper映射文件中的参数信息
@@ -71,7 +70,7 @@ public class SqlInterceptor implements Interceptor {
         // 获取sql语句
         String sql = boundSql.getSql();
         // SQL中多个空格使用一个空格代替
-        sql = sql.replaceAll("[\\s]+", " ");
+        sql = sql.replaceAll("\\s+", " ");
         if (!ObjectUtils.isEmpty(params) && !ObjectUtils.isEmpty(parameterObject)) {
             // TypeHandlerRegistry是mybatis用来管理TypeHandler的注册器，用于在java类型和jdbc类型之间进行转换
             TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
@@ -106,7 +105,7 @@ public class SqlInterceptor implements Interceptor {
     private String getParameterValue(Object obj) {
         String value = "";
         if (obj instanceof String) {
-            value = "'" + obj.toString() + "'";
+            value = "'" + obj + "'";
         } else if (obj instanceof Date) {
             DateFormat formatter = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.CHINA);
             value = "'" + formatter.format(new Date()) + "'";
