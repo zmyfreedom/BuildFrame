@@ -15,7 +15,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -26,12 +25,11 @@ import org.springframework.web.context.request.RequestContextHolder;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
-
-import static java.lang.Thread.sleep;
 
 /**
  * @author zmy
@@ -46,23 +44,25 @@ public class UserServiceImpl implements UserService {
     @Resource
     private ApplicationContext applicationContext;
 
+    // 日期格式化器 - 线程安全且高效
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    
+    // 共享线程池 - 避免每次创建销毁线程池的开销
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(
+            2, 
+            10, 
+            60L,
+            TimeUnit.SECONDS, 
+            new LinkedBlockingDeque<>(100),
+            new BasicThreadFactory.Builder().namingPattern("addUser-thread-%d").build(),
+            new ThreadPoolExecutor.DiscardPolicy()
+    );
+
     @Override
     public User getUser(String id) {
-        //通过 RequestContextHolder.getRequestAttributes() 获取当前请求的属性对象
-        //RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        //通过 resolveReference(RequestAttributes.REFERENCE_REQUEST) 方法从属性对象中解析出 HttpServletRequest 对象
-        //HttpServletRequest request1 = (HttpServletRequest) requestAttributes.resolveReference(RequestAttributes.REFERENCE_REQUEST);
-        //log.info("request1:{}",request1);
-
-        /*通过 RequestContextHolder.getRequestAttributes() 获取当前请求的属性对象,转换为 ServletRequestAttributes 类型*/
-        //ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        //通过 getRequest() 方法获取 HttpServletRequest 对象
-        //HttpServletRequest request2 = attributes.getRequest();
-        //log.info("request2: {}",request2);
-
-        //currentRequestAttributes call getRequestAttributes actually
-        HttpServletRequest request3 = ((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getRequest();
-        log.info("request3: {}",request3);
+        // 使用 RequestContextHolder.currentRequestAttributes() 获取当前请求属性
+        HttpServletRequest request = ((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getRequest();
+        log.info("request: {}",request);
 
         HttpServletResponse response = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getResponse();
         log.info("response: {}",response);
@@ -75,22 +75,19 @@ public class UserServiceImpl implements UserService {
             log.info("user.id: {}",user.getId());
 
         }catch(CustomException e){
-            e.printStackTrace();
+            log.error("CustomException occurred", e);
             throw e;
         }catch(NullPointerException e){
-            e.printStackTrace();
-            log.info("impl npe:{}",user.getId());
+            log.error("NPE when accessing user.id, user is null", e);
             throw e;
         }catch(Exception e){
-            e.printStackTrace();
-//            throw e;
-//            throw new CustomException(CustomExceptionEnum.PARAMETER_BIG_EXCEPTION);
+            log.error("Unexpected error occurred", e);
         }
         return user;
     }
 
-    // Transactional将整个方法放入事务中，如果方法内部抛出异常，则事务会回滚
-    // 注意：如果事务被本地的try-catch处理了，则不会回滚
+    // Transactional 将整个方法放入事务中，如果方法内部抛出异常，则事务会回滚
+    // 注意：如果事务被本地的 try-catch 处理了，则不会回滚
     // 内部多线程不在事务之内，如果线程抛出异常，则不会回滚
     // 事务更新到数据库需要一定时间，线程立即读是读不到的
     @Override
@@ -105,118 +102,91 @@ public class UserServiceImpl implements UserService {
         }
         user.setName(name);
         user.setAge(age);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
+        // 使用 Java 8 的日期时间 API，线程安全且高效
         try{
-            user.setBirthday(simpleDateFormat.parse(birthday));
-            System.out.println(simpleDateFormat.parse("1998-12-20"));
-        }catch (Exception e){
-            e.printStackTrace();
+            LocalDate localDate = LocalDate.parse(birthday, DATE_FORMATTER);
+            user.setBirthday(java.sql.Date.valueOf(localDate));
+        } catch (Exception e){
+            log.error("Invalid date format: {}", birthday, e);
             throw e;
         }
 
-        System.out.println(user);
-        //在service层抛出异常，事务才会回滚，如果事务被本地的try-catch处理了，则不会回滚
-        //事务的范围比锁的范围大,解锁后事务可能还未退出，此时数据库尚未解锁
-        //
+        log.info("Creating user: {}", user);
+        
+        //在 service 层抛出异常，事务才会回滚，如果事务被本地的 try-catch 处理了，则不会回滚
+        //事务的范围比锁的范围大，解锁后事务可能还未退出，此时数据库尚未解锁
         try{
-//            BaseDao<User> baseDao = applicationContext.getBean(UserInfoDao.class);
-//            baseDao.add(user);
             insert(user, UserInfoDao.class);
-            ExecutorService executorService = new ThreadPoolExecutor(1, 1, 0L,
-                    TimeUnit.SECONDS, new LinkedBlockingDeque<>(100),
-                    r -> {
-                        Thread thread = new Thread(r);
-                        thread.setName("addUser-thread"+thread.getId());
-                        thread.setDaemon(true);
-                        return thread;
-                    }, new ThreadPoolExecutor.DiscardPolicy());
-
-            executorService.execute(() -> {
+            
+            // 使用共享线程池，避免每次创建销毁线程池的开销
+            EXECUTOR_SERVICE.execute(() -> {
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.currentThread().interrupt();
+                    log.warn("Thread interrupted", e);
+                    return;
                 }
                 User user1 = userInfoDao.getUserInfoById(id);
-                log.info("addUser exception\n{}",user1);
-                throw new RuntimeException("addUser exception");
+                log.info("addUser async check\n{}",user1);
+                // 注意：异步线程中的异常不会影响主事务
             });
         }catch(Exception e){
-            e.printStackTrace();
-            log.error("addUser error:{}",e.getMessage());
+            log.error("addUser error:{}",e.getMessage(), e);
             throw e;
         }
-        //throw new RuntimeException("addUser exception");
     }
 
     private <E, D extends BaseDao<E>> void insert(E user, Class<D> clazz){
         D obj = applicationContext.getBean(clazz);
         obj.add(user);
     }
+    
     @Override
     public void generateDoc(HttpServletResponse response){
-        // pdf转换word
-//        PdfOptions options = PdfOptions.create();
-//        XWPFDocument document;
-//        try{
-//            InputStream doc = new FileInputStream("E:\\Java\\IntroductiontoAlgorithm.docx");
-//            document = new XWPFDocument(doc);
-//            OutputStream out = new FileOutputStream("E:\\Java\\pdfFile.pdf");
-//            PdfConverter.getInstance().convert(document, out, options);
-//            doc.close();
-//            out.close();
-//            if(true)
-//                return;
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
-
         Map<String, Object> map = getMap();
         //获取根目录，创建模板文件
         String filePath = copyTempFile("classpath:public/word/DocTemplate.docx");
         String fileName=System.currentTimeMillis()+".docx";
-        String tempPath="E:\\Java"+fileName;
-        try{
-            //将模板文件写入到根目录
-            //编译模板，渲染数据
-            XWPFTemplate template = XWPFTemplate.compile(filePath).render(map);
-            //将渲染后的模板写入到临时文件
-            FileOutputStream fos=new FileOutputStream(tempPath);
+        String tempPath="E:\\\\Java"+fileName;
+        try (XWPFTemplate template = XWPFTemplate.compile(filePath).render(map);
+             FileOutputStream fos = new FileOutputStream(tempPath)) {
+            // 编译模板，渲染数据并写入临时文件
             template.write(fos);
             fos.flush();
-            fos.close();
-            template.close();
-            //将临时文件写入到response
-            downDoc(response,tempPath,fileName);
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            //删除临时文件
-            File file = new File(tempPath);
-            if(file.exists()){
-                file.delete();
-            }
-            File file2 = new File(filePath);
-            if(file2.exists()){
-                file2.delete();
-            }
+            // 将临时文件写入到 response
+            downDoc(response, tempPath, fileName);
+        } catch (Exception e) {
+            log.error("Failed to generate document", e);
+        } finally {
+            // 删除临时文件
+            deleteFileIfExists(tempPath);
+            deleteFileIfExists(filePath);
         }
     }
 
-    private String copyTempFile(String tempFilePath){
-//        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(tempFilePath);
-        InputStream inputStream=null;
-        String tempFileName = System.getProperty("user.home")+"/GenerateDoc.docx";
+    private String copyTempFile(String tempFilePath) {
+        String tempFileName = System.getProperty("user.home") + "/GenerateDoc.docx";
         File file = new File(tempFileName);
-        try{
-            inputStream=new FileInputStream(new File("E:\\Java\\code\\src\\main\\resources\\public\\word\\DocTemplate.docx"));
-            FileUtils.copyInputStreamToFile(inputStream,file);
-        }catch (IOException e){
-            e.printStackTrace();
+        try (InputStream inputStream = new FileInputStream(new File("E:\\\\Java\\\\code\\\\src\\\\main\\\\resources\\\\public\\\\word\\\\DocTemplate.docx"))) {
+            FileUtils.copyInputStreamToFile(inputStream, file);
+        } catch (IOException e) {
+            log.error("Failed to copy template file", e);
             throw new RuntimeException(e);
         }
         return file.getPath();
+    }
+
+    private void deleteFileIfExists(String filePath) {
+        if (filePath != null && !filePath.isEmpty()) {
+            File file = new File(filePath);
+            if (file.exists() && file.isFile()) {
+                if (!file.delete()) {
+                    log.warn("Failed to delete file: {}", filePath);
+                }
+            }
+        }
     }
 
     private void downDoc(HttpServletResponse response,String filePath, String realFileName){
@@ -224,7 +194,7 @@ public class UserServiceImpl implements UserService {
         try{
             percentEncodedFileName=percentEncode(realFileName);
         }catch (UnsupportedEncodingException e){
-            e.printStackTrace();
+            log.error("Failed to encode filename", e);
             throw new RuntimeException(e);
         }
 
@@ -245,7 +215,7 @@ public class UserServiceImpl implements UserService {
                 bos.write(buffer,0,len);
             }
         }catch (IOException e){
-            e.printStackTrace();
+            log.error("Failed to write response", e);
         }
     }
 
@@ -253,10 +223,11 @@ public class UserServiceImpl implements UserService {
         String encode= URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
         return encode.replaceAll("\\+", "%20");
     }
+    
     private Map<String, Object> getMap(){
         Map<String, Object> map = new HashMap<>(7);
         map.put("name","CodeGeeX");
-        map.put("role","AI编程助手");
+        map.put("role","AI 编程助手");
         map.put("work","帮助用户在运行时访问和打印静态常量，从而避免编译时的潜在问题");
         map.put("age",10000);
         map.put("date",new Date());
